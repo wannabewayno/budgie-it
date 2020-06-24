@@ -1,7 +1,8 @@
 let transactions = [];
 let myChart;
 
-fetch("/api/transaction")
+export function initialize() {
+  return fetch("/api/transaction")
   .then(response => {
     return response.json();
   })
@@ -13,6 +14,7 @@ fetch("/api/transaction")
     populateTable();
     populateChart();
   });
+}
 
 function populateTotal() {
   // reduce transaction amounts to a single total value
@@ -144,10 +146,12 @@ function sendTransaction(isAdding) {
   });
 }
 
-document.querySelector("#add-btn").onclick = function() {
-  sendTransaction(true);
-};
+export function eventListeners(){
+  document.querySelector("#add-btn").onclick = function() {
+    sendTransaction(true);
+  };
 
-document.querySelector("#sub-btn").onclick = function() {
-  sendTransaction(false);
-};
+  document.querySelector("#sub-btn").onclick = function() {
+    sendTransaction(false);
+  };
+}
