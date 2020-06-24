@@ -8,8 +8,8 @@ const express = require("express");
 const logger = require("morgan");
 const compression = require("compression");
 
-const PORT = 3000;
-
+// Set up our app and configure the com port
+const PORT = process.env.PORT || 3141;
 const app = express();
 
 app.use(logger("dev"));
