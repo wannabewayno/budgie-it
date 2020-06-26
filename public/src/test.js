@@ -1,3 +1,3 @@
-import { functionBlock1 } from '../js/index.js'
+const functionBlock1 = require('../js/index');
 
 console.log(functionBlock1);

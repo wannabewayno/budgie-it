@@ -1,8 +1,8 @@
 let transactions = [];
 let myChart;
 
-export function initialize() {
-  return fetch("/api/transaction")
+function initialize() {
+  fetch("/api/transaction")
   .then(response => {
     return response.json();
   })
@@ -146,7 +146,7 @@ function sendTransaction(isAdding) {
   });
 }
 
-export function eventListeners(){
+function eventListeners(){
   document.querySelector("#add-btn").onclick = function() {
     sendTransaction(true);
   };
@@ -155,3 +155,6 @@ export function eventListeners(){
     sendTransaction(false);
   };
 }
+
+
+module.exports = {eventListeners, initialize};

@@ -1,8 +1,6 @@
 const FILES_TO_CACHE = [
   './',
   './index.html',
-  './js/index.js',
-  './js/installServiceWorker.js',
   './service-worker.js',
   './dist/manifest.json',
   './css/styles.css',
