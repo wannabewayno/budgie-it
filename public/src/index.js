@@ -1,6 +1,5 @@
-const { installServiceWorker } = require('../js/installServiceWorker.js');
-const { initialize, eventListeners } = require('../js/index.js');
-
+import { installServiceWorker } from '../js/installServiceWorker.js';
+import { initialize, eventListeners } from '../js/index.js';
 
 installServiceWorker();
 initialize();

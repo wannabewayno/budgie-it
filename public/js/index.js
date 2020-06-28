@@ -2,19 +2,47 @@ let transactions = [];
 let myChart;
 
 function initialize() {
-  fetch("/api/transaction")
-  .then(response => {
-    return response.json();
+  fetch("/api/transaction",{
+    method: 'GET', 
+    mode: navigator.onLine ? 'cors' : 'same-origin', // no-cors, *cors, same-origin
+    cache: navigator.onLine ? 'reload' : 'only-if-cached', // *default, no-cache, reload, force-cache, only-if-cached
+    credentials: 'same-origin', 
+    headers: {
+      Accept: "application/json, text/plain, */*",
+      "Content-Type": "application/json"
+    },
+      // 'Content-Type': 'application/x-www-form-urlencoded'
+    redirect: 'follow', 
+    referrerPolicy: 'no-referrer', 
   })
-  .then(data => {
+  .then(response => response.json() )
+  .then(async data => {
     // save db data on global variable
     transactions = data;
+
+    if (!navigator.onLine) {
+      const offlineData = await getRecords()
+      console.log(offlineData);
+      offlineData.onsuccess = function(event) {
+        console.log(event.target.result);
+      }
+    }
+    
+  })
+  .then(offlineData => {
+    console.log(offlineData);
+    if (offlineData){
+      console.log(offlineData);
+    }
 
     populateTotal();
     populateTable();
     populateChart();
-  });
+  })
+  .catch( error => console.log(error) )
 }
+
+initialize();
 
 function populateTotal() {
   // reduce transaction amounts to a single total value
@@ -135,10 +163,12 @@ function sendTransaction(isAdding) {
       nameEl.value = "";
       amountEl.value = "";
     }
+    initialize();
   })
   .catch(err => {
     // fetch failed, so save in indexed db
     saveRecord(transaction);
+    initialize();
 
     // clear form
     nameEl.value = "";
@@ -156,5 +186,4 @@ function eventListeners(){
   };
 }
 
-
-module.exports = {eventListeners, initialize};
+eventListeners();

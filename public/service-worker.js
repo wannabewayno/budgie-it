@@ -1,4 +1,10 @@
+
 const FILES_TO_CACHE = [
+  'https://cdn.jsdelivr.net/npm/chart.js@2.8.0',
+  'https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css',
+  './js/index.js',
+  './js/installServiceWorker.js',
+  './js/db.js',
   './',
   './index.html',
   './service-worker.js',
@@ -15,6 +21,10 @@ const FILES_TO_CACHE = [
   './dist/bundle.js'
 ];
 
+const RUNTIMES_TO_CACHE = [
+  '/api/transaction'
+]
+
 const STATIC_CACHE = "static-cache-v1";
 const RUNTIME_CACHE = "runtime-cache";
 
@@ -22,8 +32,18 @@ self.addEventListener("install", event => {
   event.waitUntil(
     caches
       .open(STATIC_CACHE)
-      .then(cache => cache.addAll(FILES_TO_CACHE))
+      .then(Cache => Promise.all([ Cache.matchAll(FILES_TO_CACHE), Cache ]) )
+      .then(cacheResponse => {
+        const [ cachedData, Cache] = cacheResponse
+        if (cachedData.length === 0){
+          return Cache.addAll(FILES_TO_CACHE)
+        } else {
+          return
+        }
+      })
+      // .then(cache => cache.addAll(FILES_TO_CACHE))
       .then(() => self.skipWaiting())
+      .catch(error => console.log(error))
   );
 });
 
@@ -52,10 +72,7 @@ self.addEventListener("activate", event => {
 
 self.addEventListener("fetch", event => {
   // non GET requests are not cached and requests to other origins are not cached
-  if (
-    event.request.method !== "GET" ||
-    !event.request.url.startsWith(self.location.origin)
-  ) {
+  if ( event.request.method !== "GET" ) {
     event.respondWith(fetch(event.request));
     return;
   }
@@ -70,7 +87,7 @@ self.addEventListener("fetch", event => {
             cache.put(event.request, response.clone());
             return response;
           })
-          .catch(() => caches.match(event.request));
+          .catch(() => cache.match(event.request))
       })
     );
     return;
