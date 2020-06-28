@@ -18,21 +18,21 @@ function initialize() {
   .then(response => response.json() )
   .then(async data => {
     // save db data on global variable
+    // if online  -> data from mongo db
+    // if offline -> cached mongo db data from the last online GET request
     transactions = data;
 
     if (!navigator.onLine) {
-      const offlineData = await getRecords()
-      console.log(offlineData);
-      offlineData.onsuccess = function(event) {
-        console.log(event.target.result);
-      }
+      // if offline, retrieve offline data from indexeddb
+      return await getAllRecords()
     }
     
   })
   .then(offlineData => {
-    console.log(offlineData);
+
     if (offlineData){
-      console.log(offlineData);
+      // merge offline data with cached data
+      transactions.unshift(...offlineData.reverse());
     }
 
     populateTotal();
@@ -184,6 +184,13 @@ function eventListeners(){
   document.querySelector("#sub-btn").onclick = function() {
     sendTransaction(false);
   };
+
+  // listen for app coming back online
+  window.addEventListener("online", () => {
+    checkDatabase()
+    .then( () => initialize() )
+
+  });
 }
 
 eventListeners();

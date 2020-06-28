@@ -21,59 +21,72 @@ request.onerror = function(event) {
   console.log("Woops! " + event.target.errorCode);
 };
 
-function saveRecord(record) {
-  // create a transaction on the pending db with readwrite access
-  const transaction = db.transaction(["pending"], "readwrite");
-
-  // access your pending object store
-  const store = transaction.objectStore("pending");
-
-  // add record to your store with add method.
-  store.add(record);
-}
-
-function getRecords() {
-    // open a transaction on your pending db
-    const transaction = db.transaction(["pending"], "readwrite");
-    // access your pending object store
-    const store = transaction.objectStore("pending");
-    // get all records
-    const getAll = store.getAll()
-    return getAll
-    // getAll.onsuccess = function(event){
-    //     console.log(event.target.result);
-    //     results = event.target.result;
-    // }
-    // return results
-}
-
-function checkDatabase() {
-  const getAll = getRecords()
-
-  getAll.onsuccess = function() {
-    if (getAll.result.length > 0) {
-      fetch("/api/transaction/bulk", {
-        method: "POST",
-        body: JSON.stringify(getAll.result),
-        headers: {
-          Accept: "application/json, text/plain, */*",
-          "Content-Type": "application/json"
-        }
-      })
-      .then(response => response.json())
-      .then(() => {
-        // if successful, open a transaction on your pending db
-        const transaction = db.transaction(["pending"], "readwrite");
+function accessDB(storeName) {
+    return new Promise((resolve,reject) => {
+        // create a transaction on the pending db with readwrite access
+        const transaction = db.transaction([storeName], "readwrite");
 
         // access your pending object store
-        const store = transaction.objectStore("pending");
+        const store = transaction.objectStore(storeName);
 
-        // clear all items in your store
-        store.clear();
-      });
-    }
-  };
+        resolve(store)
+    });
 }
 
-// listen for app coming back online
-window.addEventListener("online", checkDatabase);
+function saveRecord(record) {
+    return new Promise ((resolve,reject) => {
+        //access the database on the 'pending' object store
+        accessDB('pending')
+        // add record to your store with add method.
+        .then( store => resolve(store.add(record)))
+    })
+}
+
+function getAllRecords() {
+    return new Promise ((resolve,reject) => {
+        // access db on the 'pending' object store
+        accessDB('pending')
+        .then(store => {
+            // get all records
+            const getAll = store.getAll()
+
+            getAll.onsuccess = function (event) {
+                resolve(event.target.result);
+            }
+
+            getAll.onerror = function (error) {
+                reject(error)
+            }
+        }) 
+    })
+}
+
+function clearAllRecords() {
+    return new Promise((resolve,reject) => {
+        //access the database on the 'pending' object store
+        accessDB('pending')
+        // clear the store
+        .then( store => resolve(store.clear()) )
+    })
+}
+
+async function checkDatabase() {
+   return getAllRecords()
+    .then(allRecords => {
+
+        if (allRecords.length > 0) {
+            
+            return fetch("/api/transaction/bulk", {
+                method: "POST",
+                body: JSON.stringify(allRecords),
+                headers: {
+                    Accept: "application/json, text/plain, */*",
+                    "Content-Type": "application/json"
+                }
+            })
+            .then( response => response.json() )
+            .then( () => clearAllRecords() )
+        }
+    })
+}
+
