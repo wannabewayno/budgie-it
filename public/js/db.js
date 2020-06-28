@@ -75,7 +75,7 @@ async function checkDatabase() {
     .then(allRecords => {
 
         if (allRecords.length > 0) {
-            
+
             return fetch("/api/transaction/bulk", {
                 method: "POST",
                 body: JSON.stringify(allRecords),
@@ -89,4 +89,3 @@ async function checkDatabase() {
         }
     })
 }
-
